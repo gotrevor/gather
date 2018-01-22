@@ -5,11 +5,13 @@
 const Q = require('q');
 const _ = require('lodash');
 const os = require('os');
+const moment = require('moment');
 const { execSync } = require('child_process');
+const AWS = require('aws-sdk');
+
+AWS.config.setPromisesDependency(Q.Promise);
 
 const delayMs = +process.env.delayMs || 1000;
-
-console.log(availDiskMb());
 
 main().done();
 
@@ -27,7 +29,10 @@ function gatherMetrics() {
     { metric: 'freemem', value: freemem },
     { metric: 'availDiskMb', value: availDiskMb() },
   ];
-  return Q(_.map(metrics, metric => _.assign(metric, { user: 'trevor' })));
+
+  const user = 'trevor';
+  const timestamp = moment.utc().toISOString();
+  return Q(_.map(metrics, metric => _.assign(metric, { user, timestamp })));
 }
 
 function availDiskMb() {
@@ -35,6 +40,21 @@ function availDiskMb() {
   return +(execSync(command).toString('utf8'));
 }
 
+const kinesis = new AWS.Kinesis({ region: 'us-east-1' });
 function pushMetrics(metrics) {
-  console.log(JSON.stringify(metrics));
+  if (+process.env.CONSOLE_OUTPUT) {
+    console.log(JSON.stringify(metrics));
+    return null;
+  }
+
+  const StreamName = 'talk-metrics';
+  const Records = _.map(metrics, (metric) => {
+    return {
+      Data: JSON.stringify(metric),
+      PartitionKey: metric.user,
+    };
+  });
+  return kinesis.putRecords({ Records, StreamName })
+    .promise()
+    .tap(() => console.log(`wrote ${_.size(Records)} records to ${StreamName}`));
 }
