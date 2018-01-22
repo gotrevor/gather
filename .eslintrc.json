@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "no-console": [ "off" ],
+    "newline-per-chained-call": [ "off" ],
+    "no-use-before-define": [ "off" ],
+    "arrow-body-style": [ "off" ],
+
+    "func-names": [ "off" ],
+    "new-cap": [ "off" ],
+    "class-methods-use-this": [ "off" ],
+    "no-param-reassign": [ "off" ]
+  },
+  "extends": "mm",
+  "plugins": [
+    "react",
+    "jsx-a11y",
+    "import"
+  ]
+}
