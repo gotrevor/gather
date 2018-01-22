@@ -50,7 +50,7 @@ function pushMetrics(metrics) {
   const StreamName = 'talk-metrics';
   const Records = _.map(metrics, (metric) => {
     return {
-      Data: JSON.stringify(metric),
+      Data: `${JSON.stringify(metric)}\n`,
       PartitionKey: metric.user,
     };
   });
